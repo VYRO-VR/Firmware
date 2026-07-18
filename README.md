@@ -20,6 +20,8 @@ time the firmware is updated.
 | `VYRO_VR_Tracker_ProMicro_Default_SPI.uf2` | ProMicro tracker (default SPI wiring) | Tracker | UF2 |
 | `VYRO_VR_Tracker_ProMicro_Stacked_I2C.uf2` | Stacked ProMicro tracker (I2C) | Tracker | UF2 |
 | `VYRO_VR_Tracker_ProMicro_Stacked_SPI.uf2` | Stacked ProMicro tracker (SPI) | Tracker | UF2 |
+| `VYRO_VR_Tracker_Styria_Mini_I2C.uf2` | Styria Mini tracker (I2C IMU) | Tracker | UF2 |
+| `VYRO_VR_Tracker_Styria_Mini_SPI.uf2` | Styria Mini tracker (SPI IMU) | Tracker | UF2 |
 | `VYRO_VR_Receiver_Fox_Dongle.uf2` | Fox dongle (nRF52840) | Receiver | UF2 |
 | `VYRO_VR_Receiver_Fox_Dongle33.uf2` | Fox dongle (nRF52833) | Receiver | UF2 |
 | `VYRO_VR_Receiver_Holyiot_21017.hex` | Holyiot 21017 dongle | Receiver | HEX |

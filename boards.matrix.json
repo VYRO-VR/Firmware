@@ -83,6 +83,20 @@
       "fileformat": "uf2"
     },
     {
+      "boardname": "styria_mini_uf2/nrf52840",
+      "source": "tracker_dev",
+      "type": "tracker",
+      "filename": "VYRO_VR_Tracker_Styria_Mini_I2C",
+      "fileformat": "uf2"
+    },
+    {
+      "boardname": "styria_mini_uf2/nrf52840/spi",
+      "source": "tracker_dev",
+      "type": "tracker",
+      "filename": "VYRO_VR_Tracker_Styria_Mini_SPI",
+      "fileformat": "uf2"
+    },
+    {
       "boardname": "foxdongle_uf2/nrf52840",
       "source": "receiver_dev",
       "type": "receiver",
