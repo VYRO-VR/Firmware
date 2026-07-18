@@ -20,10 +20,8 @@ time the firmware is updated.
 | `VVR_Tracker_ProMicro_Default_SPI_{commit}.uf2` | ProMicro tracker (default SPI wiring) | Tracker | UF2 |
 | `VVR_Tracker_ProMicro_Stacked_I2C_{commit}.uf2` | Stacked ProMicro tracker (I2C) | Tracker | UF2 |
 | `VVR_Tracker_ProMicro_Stacked_SPI_{commit}.uf2` | Stacked ProMicro tracker (SPI) | Tracker | UF2 |
-| `VVR_Tracker_Styria_Mini_I2C_{commit}.uf2` | Styria Mini tracker (I2C IMU) | Tracker | UF2 |
 | `VVR_Tracker_Styria_Mini_SPI_{commit}.uf2` | Styria Mini tracker (SPI IMU) | Tracker | UF2 |
 | `VVR_Receiver_Fox_Dongle_{commit}.uf2` | Fox dongle (nRF52840) | Receiver | UF2 |
-| `VVR_Receiver_Fox_Dongle33_{commit}.uf2` | Fox dongle (nRF52833) | Receiver | UF2 |
 | `VVR_Receiver_Holyiot_21017_{commit}.hex` | Holyiot 21017 dongle | Receiver | HEX |
 | `VVR_Receiver_Styria_R1_{commit}.uf2` | Styria R1 receiver | Receiver | UF2 |
 | `VVR_Receiver_ProMicro_{commit}.uf2` | ProMicro receiver | Receiver | UF2 |

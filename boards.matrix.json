@@ -83,13 +83,6 @@
       "fileformat": "uf2"
     },
     {
-      "boardname": "styria_mini_uf2/nrf52840",
-      "source": "tracker_dev",
-      "type": "tracker",
-      "filename": "VVR_Tracker_Styria_Mini_I2C",
-      "fileformat": "uf2"
-    },
-    {
       "boardname": "styria_mini_uf2/nrf52840/spi",
       "source": "tracker_dev",
       "type": "tracker",
@@ -101,13 +94,6 @@
       "source": "receiver_dev",
       "type": "receiver",
       "filename": "VVR_Receiver_Fox_Dongle",
-      "fileformat": "uf2"
-    },
-    {
-      "boardname": "foxdongle33_uf2/nrf52833",
-      "source": "receiver_dev",
-      "type": "receiver",
-      "filename": "VVR_Receiver_Fox_Dongle33",
       "fileformat": "uf2"
     },
     {
