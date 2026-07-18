@@ -60,7 +60,8 @@ The [build workflow](.github/workflows/build.yml) is modeled after
    `vYYYY.MM.DD-HHMM`, with release notes listing the exact source commits and a
    `build-info.json` recording the full build provenance.
 
-Pushes and pull requests to this repository run build-only validation (no release).
+Pull requests run build-only validation (no release). Pushes to this repository also
+create a release when the resulting firmware would differ from the latest release.
 A release can be forced at any time from the **Actions** tab via **Run workflow**.
 
 ## Adding or changing a build
