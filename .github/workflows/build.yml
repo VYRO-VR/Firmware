@@ -245,7 +245,8 @@ jobs:
           set -euo pipefail
 
           MATRIX_HASH=$(sha256sum "${{ env.BOARD_MATRIX_FILE }}" | cut -d' ' -f1)
-          BUILD_KEY=$( { jq -S '{sdk, firmware}' data/lookups.json; echo "$MATRIX_HASH"; } | sha256sum | cut -d' ' -f1)
+          WORKFLOW_HASH=$(sha256sum .github/workflows/build.yml | cut -d' ' -f1)
+          BUILD_KEY=$( { jq -S '{sdk, firmware}' data/lookups.json; echo "$MATRIX_HASH"; echo "$WORKFLOW_HASH"; } | sha256sum | cut -d' ' -f1)
 
           jq --arg key "$BUILD_KEY" '.build_key=$key' data/lookups.json > data/tmp.json
           mv data/tmp.json data/lookups.json
