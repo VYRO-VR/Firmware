@@ -613,7 +613,7 @@ jobs:
           echo "Firmware files collected:"
           ls -lah Releases
 
-          FILE_COUNT=$(find Releases -type f | wc -l)
+          FILE_COUNT=$(find Releases -type f \( -name "*.uf2" -o -name "*.hex" \) | wc -l)
           if [ "$FILE_COUNT" -eq 0 ]; then
             echo "ERROR: No firmware files were built — refusing to create an empty release." >&2
             exit 1
