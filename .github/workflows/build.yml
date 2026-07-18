@@ -1,0 +1,639 @@
+name: Build & Release ViroVR Firmware
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+  push:
+    branches:
+      - main
+      - master
+      - claude/virovr-firmware-releases-ffn6si
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.sha || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  REF_SHA: ${{ github.event.pull_request.head.sha || github.ref }}
+  BOARD_MATRIX_FILE: "boards.matrix.json"
+
+jobs:
+
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧰 Cache + Install Apt Dependencies
+        id: cache-packages
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: >-
+            git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget
+            python3-dev python3-pip python3-setuptools python3-tk python3-wheel python3-venv
+            xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1
+          version: 1.0
+
+  generate_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.gen.outputs.matrix }}
+      count: ${{ steps.gen.outputs.count }}
+    steps:
+      - name: 💻 Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.REF_SHA }}
+
+      - name: 🧮 Generate Build Matrix from JSON
+        id: gen
+        run: |
+          set -euo pipefail
+
+          MATRIX="$(jq -c '
+            . as $root
+            | ($root.profiles) as $profiles
+            | ($root.sources) as $sources
+            | {boards: (
+                $root.variants
+                | map(
+                    . as $v
+                    | ($sources[$v.source]) as $s
+                    | if $s == null then
+                        error("Unknown source key: \($v.source)")
+                      else
+                        ($profiles[$s.profile]) as $p
+                        | if $p == null then
+                            error("Unknown profile key in source: \($s.profile)")
+                          else
+                            ($v + $s + $p | del(.source, .profile))
+                          end
+                      end
+                  )
+                | to_entries
+                | map(.value + {index: (.key + 1)})
+              )}
+          ' "${{ env.BOARD_MATRIX_FILE }}")"
+
+          echo "Matrix JSON length: ${#MATRIX}"
+          if [ ${#MATRIX} -gt 900000 ]; then
+            echo "Matrix output too large for GITHUB_OUTPUT (${#MATRIX} bytes)" >&2
+            exit 1
+          fi
+
+          COUNT=$(echo "$MATRIX" | jq '.boards | length')
+
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+
+  generate_lookups:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN || github.token }}
+    outputs:
+      changed: ${{ steps.detect-changes.outputs.changed }}
+    steps:
+
+      - name: 💻 Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.REF_SHA }}
+
+      - name: 🔎 Generate Lookups
+        id: generate-lookups
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data
+
+          MATRIX_FILE="${{ env.BOARD_MATRIX_FILE }}"
+
+          resolve_sha () {
+            local repo="$1"
+            local ref="$2"
+
+            if [[ "$ref" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
+              local owner name
+              owner=$(echo "$repo" | sed -E 's#^https://github.com/##; s#\.git$##' | cut -d/ -f1)
+              name=$(echo "$repo" | sed -E 's#^https://github.com/##; s#\.git$##' | cut -d/ -f2)
+              if [ -z "$owner" ] || [ -z "$name" ]; then
+                echo "ERROR: Could not parse GitHub repo owner/name from: $repo" >&2
+                return 1
+              fi
+
+              local api_url="https://api.github.com/repos/${owner}/${name}/commits/${ref}"
+              local sha
+              sha=$(curl -fsSL "$api_url" | jq -r '.sha')
+              if [ -n "$sha" ] && [ "$sha" != "null" ]; then
+                echo "$sha"
+                return 0
+              fi
+
+              echo "ERROR: Could not resolve commit SHA for ${repo}@${ref} via GitHub API" >&2
+              return 1
+            fi
+
+            local attempts=10
+            local delay=5
+            local sha=""
+
+            for ((i=1;i<=attempts;i++)); do
+              sha=$(git ls-remote "$repo" "refs/heads/$ref" | awk '{print $1}' | head -n1)
+
+              if [[ -z "$sha" ]]; then
+                sha=$(git ls-remote "$repo" "refs/tags/$ref" | awk '{print $1}' | head -n1)
+              fi
+
+              if [[ -z "$sha" ]]; then
+                sha=$(git ls-remote "$repo" "$ref" | awk '{print $1}' | head -n1)
+              fi
+
+              if [[ -n "$sha" ]]; then
+                echo "$sha"
+                return 0
+              fi
+
+              echo "Attempt $i/$attempts failed for $repo@$ref — retrying in ${delay}s..." >&2
+              sleep "$delay"
+              delay=$((delay * 2))
+            done
+
+            echo "ERROR: Could not resolve SHA for $repo@$ref after $attempts attempts" >&2
+            return 1
+          }
+
+          echo "{}" > data/lookups.json
+
+          CI_URL="https://github.com/${GITHUB_REPOSITORY}"
+          CI_BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+
+          if [[ "$CI_BRANCH" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
+            CI_SHA="$CI_BRANCH"
+          else
+            CI_SHA="$(resolve_sha "$CI_URL" "$CI_BRANCH")"
+          fi
+          CI_SHORT="$(echo "$CI_SHA" | cut -c1-7)"
+          CI_MESSAGE=$(git log -1 --pretty=%B)
+
+          jq \
+          --arg url "$CI_URL" \
+          --arg branch "$CI_BRANCH" \
+          --arg sha "$CI_SHA" \
+          --arg short "$CI_SHORT" \
+          --arg message "$CI_MESSAGE" \
+          '.ci = {
+            repository: $url,
+            branch: $branch,
+            commit: $sha,
+            short_commit: $short,
+            message: $message
+          }' \
+            data/lookups.json > data/tmp.json
+          mv data/tmp.json data/lookups.json
+
+          jq -r '.profiles[] | "\(.sdk_url) \(.sdk_revision)"' "$MATRIX_FILE" \
+          | sort -u | while read url rev; do
+            sha=$(resolve_sha "$url" "$rev")
+            key="${url}@${rev}"
+            jq \
+              --arg key "$key" \
+              --arg sha "$sha" \
+              '.sdk[$key]=$sha' \
+              data/lookups.json > data/tmp.json
+            mv data/tmp.json data/lookups.json
+          done
+
+          jq -r '.sources[] | "\(.repository_url) \(.repository_revision)"' "$MATRIX_FILE" \
+          | sort -u | while read url rev; do
+            sha=$(resolve_sha "$url" "$rev")
+            key="${url}@${rev}"
+            jq \
+              --arg key "$key" \
+              --arg sha "$sha" \
+              '.firmware[$key]=$sha' \
+              data/lookups.json > data/tmp.json
+            mv data/tmp.json data/lookups.json
+          done
+
+          echo "Validating lookups.json for blank SHAs..."
+          if [ -z "$(jq -r '.ci.commit' data/lookups.json)" ]; then
+            echo "ERROR: CI commit SHA is blank" >&2
+            exit 1
+          fi
+          if jq -e '.sdk | to_entries[] | select(.value == "")' data/lookups.json >/dev/null 2>&1; then
+            echo "ERROR: Blank SDK SHA(s) found:" >&2
+            jq -r '.sdk | to_entries[] | select(.value == "") | .key' data/lookups.json >&2
+            exit 1
+          fi
+          if jq -e '.firmware | to_entries[] | select(.value == "")' data/lookups.json >/dev/null 2>&1; then
+            echo "ERROR: Blank firmware SHA(s) found:" >&2
+            jq -r '.firmware | to_entries[] | select(.value == "") | .key' data/lookups.json >&2
+            exit 1
+          fi
+          echo "All SHAs resolved successfully."
+
+      - name: 🕵️ Detect Firmware Updates
+        id: detect-changes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          MATRIX_HASH=$(sha256sum "${{ env.BOARD_MATRIX_FILE }}" | cut -d' ' -f1)
+          BUILD_KEY=$( { jq -S '{sdk, firmware}' data/lookups.json; echo "$MATRIX_HASH"; } | sha256sum | cut -d' ' -f1)
+
+          jq --arg key "$BUILD_KEY" '.build_key=$key' data/lookups.json > data/tmp.json
+          mv data/tmp.json data/lookups.json
+
+          PREV_KEY=""
+          if gh release download --repo "${GITHUB_REPOSITORY}" --pattern build-info.json -O prev-build-info.json 2>/dev/null; then
+            PREV_KEY=$(jq -r '.build_key // empty' prev-build-info.json || true)
+          else
+            echo "No previous release with build-info.json found — treating everything as changed."
+          fi
+
+          if [ -n "$PREV_KEY" ] && [ "$BUILD_KEY" = "$PREV_KEY" ]; then
+            CHANGED=false
+            echo "No firmware, SDK, or matrix changes since the last release."
+          else
+            CHANGED=true
+            echo "Changes detected since the last release (or no previous release exists)."
+          fi
+
+          echo "build_key=$BUILD_KEY"
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+
+      - name: 📦 Cache Lookups
+        id: cache-lookups
+        uses: actions/cache/save@v5
+        with:
+          path: data/lookups.json
+          key: data-${{ github.run_id }}
+
+  build:
+    needs: [setup, generate_matrix, generate_lookups]
+    if: ${{ github.event_name != 'schedule' || needs.generate_lookups.outputs.changed == 'true' }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: 💻 Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.REF_SHA }}
+
+      - name: 🧰 Cache + Install Apt Dependencies
+        id: restore-packages
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: >-
+            git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget
+            python3-dev python3-pip python3-setuptools python3-tk python3-wheel python3-venv
+            xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1
+          version: 1.0
+
+      - name: 📦 Restore Lookups Cache
+        id: restore-lookups
+        uses: actions/cache/restore@v5
+        with:
+          path: data/lookups.json
+          key: data-${{ github.run_id }}
+          fail-on-cache-miss: true
+
+      - name: 📦 Restore Zephyr SDK
+        id: restore-sdk
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/zephyr-sdk
+          key: zephyr-sdk-${{ matrix.boards.zephyr_sdk_version }}
+
+      - name: 🪁 Install Zephyr SDK
+        id: install-zephyr
+        if: steps.restore-sdk.outputs.cache-hit != 'true'
+        run: |
+          wget -q -O zephyr-sdk_linux-x86_64_minimal.tar.xz https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${{ matrix.boards.zephyr_sdk_version }}/zephyr-sdk-${{ matrix.boards.zephyr_sdk_version }}_linux-x86_64_minimal.tar.xz
+          tar xf zephyr-sdk_linux-x86_64_minimal.tar.xz -C ~/
+          rm -rf ~/zephyr-sdk
+          mv ~/zephyr-sdk-*/ ~/zephyr-sdk
+          ~/zephyr-sdk/setup.sh -c -t arm-zephyr-eabi
+
+      - name: 📦 Save Zephyr SDK
+        id: cache-sdk
+        if: steps.restore-sdk.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/zephyr-sdk
+          key: zephyr-sdk-${{ matrix.boards.zephyr_sdk_version }}
+
+      - name: 🪁 Register Zephyr SDK
+        id: register-zephyr
+        run: |
+          ~/zephyr-sdk/setup.sh -c -t arm-zephyr-eabi
+
+      - name: 💻 Checkout CI Manifest Repo (for west init)
+        uses: actions/checkout@v6
+        with:
+          path: zephyr-workspace/Firmware-CI
+          ref: ${{ env.REF_SHA }}
+
+      - name: 🔎 Lookup SDK Hash
+        id: sdk-hash
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          key="${{ matrix.boards.sdk_url }}@${{ matrix.boards.sdk_revision }}"
+          sha=$(jq -r --arg key "$key" '.sdk[$key]' data/lookups.json)
+
+          echo "sdk_sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: 📦 Restore West Workspace (by SDK SHA)
+        id: restore-west
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            zephyr-workspace/.west
+            zephyr-workspace/zephyr
+            zephyr-workspace/nrf
+            zephyr-workspace/modules
+            zephyr-workspace/nrfxlib
+            zephyr-workspace/bootloader
+            zephyr-workspace/tools
+          key: west-workspace-${{ matrix.boards.zephyr_sdk_version }}-${{ steps.sdk-hash.outputs.sdk_sha }}
+
+      - name: 📦 Restore Zephyr Python Requirements
+        id: restore-pip
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.venv
+          key: venv-pip-${{ matrix.boards.zephyr_sdk_version }}
+
+      - name: 📦 Restore Python Venv
+        if: steps.restore-pip.outputs.cache-hit != 'true'
+        id: restore-venv
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.venv
+          key: venv-${{ matrix.boards.zephyr_sdk_version }}
+
+      - name: 🐍 Setup Python Venv + West
+        if: ${{ steps.restore-pip.outputs.cache-hit != 'true' && steps.restore-venv.outputs.cache-hit != 'true' }}
+        id: setup-venv
+        run: |
+          python3 -m venv ~/.venv
+          ~/.venv/bin/pip install west ninja
+
+      - name: 📦 Save Python Venv
+        id: cache-venv
+        if: ${{ steps.restore-venv.outputs.cache-hit != 'true' && steps.setup-venv.outcome == 'success' }}
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.venv
+          key: venv-${{ matrix.boards.zephyr_sdk_version }}
+
+      - name: ♻️ Initialize Zephyr Workspace
+        id: init-zephyr
+        run: |
+          echo "$HOME/.venv/bin" >> $GITHUB_PATH
+
+          export PATH="$HOME/.venv/bin:$PATH"
+
+          sed -i '/- name:[[:space:]]*sdk-nrf/,/import:/ { s|url:[[:space:]]*.*|url: ${{ matrix.boards.sdk_url }}|; s|revision:[[:space:]]*.*|revision: ${{ matrix.boards.sdk_revision }}|; }' zephyr-workspace/Firmware-CI/west.yml
+
+          mkdir -p zephyr-workspace
+          cd zephyr-workspace
+
+          if [ "${{ steps.restore-west.outputs.cache-hit }}" != "true" ]; then
+            sudo rm -rf .west zephyr nrf modules nrfxlib bootloader tools
+            west init -l Firmware-CI
+            west update --narrow -o=--depth=1
+          fi
+
+          west zephyr-export
+
+      - name: 📦 Save West Workspace (by SDK SHA)
+        id: cache-west
+        if: steps.restore-west.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            zephyr-workspace/.west
+            zephyr-workspace/zephyr
+            zephyr-workspace/nrf
+            zephyr-workspace/modules
+            zephyr-workspace/nrfxlib
+            zephyr-workspace/bootloader
+            zephyr-workspace/tools
+          key: west-workspace-${{ matrix.boards.zephyr_sdk_version }}-${{ steps.sdk-hash.outputs.sdk_sha }}
+
+      - name: 🐍 Install Zephyr Python Requirements
+        id: install-pip-requirements
+        if: steps.restore-pip.outputs.cache-hit != 'true'
+        run: |
+          cd zephyr-workspace
+
+          ~/.venv/bin/pip install -r zephyr/scripts/requirements.txt
+
+      - name: 📦 Save Zephyr Python Requirements
+        id: cache-pip
+        if: steps.restore-pip.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.venv
+          key: venv-pip-${{ matrix.boards.zephyr_sdk_version }}
+
+      - name: 🔎 Lookup Firmware Hash
+        id: firmware-hash
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          key="${{ matrix.boards.repository_url }}@${{ matrix.boards.repository_revision }}"
+          sha=$(jq -r --arg key "$key" '.firmware[$key]' data/lookups.json)
+
+          echo "firmware_sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: 📦 Restore Firmware Repository
+        id: restore-repository
+        uses: actions/cache/restore@v5
+        with:
+          path: zephyr-workspace/firmware
+          key: firmware-${{ steps.firmware-hash.outputs.firmware_sha }}
+
+      - name: 📥 Clone Firmware Repository
+        id: clone-repository
+        if: steps.restore-repository.outputs.cache-hit != 'true'
+        run: |
+          cd zephyr-workspace
+
+          rm -rf firmware
+          git clone --filter=blob:none --no-checkout "${{ matrix.boards.repository_url }}" firmware
+          git -C firmware checkout ${{ steps.firmware-hash.outputs.firmware_sha }}
+          git -C firmware submodule update --init --recursive --depth 1
+
+      - name: 📦 Save Firmware Repository Cache
+        id: cache-repository
+        if: steps.restore-repository.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: zephyr-workspace/firmware
+          key: firmware-${{ steps.firmware-hash.outputs.firmware_sha }}
+
+      - name: 🔧 Preparing Build Environment
+        id: prepare-build
+        run: |
+          cd zephyr-workspace
+
+          sudo rm -rf Releases-${{ matrix.boards.index }}
+          mkdir Releases-${{ matrix.boards.index }}
+
+      - name: 🔨 Build ${{ matrix.boards.filename }} - ${{ matrix.boards.boardname }}
+        id: build-firmware
+        run: |
+          cd zephyr-workspace
+
+          sudo rm -rf firmware/build
+          mkdir firmware/build
+
+          west build \
+              --board ${{ matrix.boards.boardname }} \
+              --pristine=always firmware \
+              --build-dir firmware/build \
+              -- \
+              -DNCS_TOOLCHAIN_VERSION=NONE \
+              -DBOARD_ROOT=../firmware
+
+          FORMAT="${{ matrix.boards.fileformat }}"
+
+          SRC=""
+          for d in firmware/build/firmware/zephyr firmware/build/zephyr; do
+            if [ -f "$d/zephyr.$FORMAT" ]; then
+              SRC="$d/zephyr.$FORMAT"
+              break
+            fi
+          done
+
+          if [ -z "$SRC" ]; then
+            echo "Missing expected $FORMAT output under firmware/build" >&2
+            find firmware/build -maxdepth 3 -name "zephyr.*" >&2 || true
+            exit 1
+          fi
+
+          mv "$SRC" "Releases-${{ matrix.boards.index }}/${{ matrix.boards.filename }}.$FORMAT"
+
+      - name: 💾 Upload Firmware Artifact
+        id: upload-payload
+        if: ${{ steps.build-firmware.outcome == 'success' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.boards.filename }}
+          if-no-files-found: warn
+          path: |
+            zephyr-workspace/Releases-${{ matrix.boards.index }}/*.uf2
+            zephyr-workspace/Releases-${{ matrix.boards.index }}/*.hex
+
+  release:
+    needs: [generate_matrix, generate_lookups, build]
+    env:
+      MATRIX_COUNT: ${{ needs.generate_matrix.outputs.count }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN || github.token }}
+    if: ${{ (github.event_name == 'schedule' && needs.generate_lookups.outputs.changed == 'true') || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: 💻 Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.REF_SHA }}
+
+      - name: 📦 Restore Lookups Cache
+        id: restore-lookups
+        uses: actions/cache/restore@v5
+        with:
+          path: data/lookups.json
+          key: data-${{ github.run_id }}
+          fail-on-cache-miss: true
+
+      - name: 📥 Download All Firmware Artifacts
+        id: download-payloads
+        uses: actions/download-artifact@v8
+        with:
+          path: collected-firmware
+
+      - name: 📂 Merge Firmware Files
+        id: merge-payload
+        run: |
+          set -euo pipefail
+          mkdir -p Releases
+
+          echo "Collecting firmware files..."
+          find collected-firmware -type f \( -name "*.uf2" -o -name "*.hex" \) -exec cp {} Releases/ \;
+          echo "Firmware files collected:"
+          ls -lah Releases
+
+          FILE_COUNT=$(find Releases -type f | wc -l)
+          if [ "$FILE_COUNT" -eq 0 ]; then
+            echo "ERROR: No firmware files were built — refusing to create an empty release." >&2
+            exit 1
+          fi
+          echo "FILE_COUNT=$FILE_COUNT" >> $GITHUB_ENV
+
+      - name: 📝 Generate Build Info + Release Notes
+        id: generate-notes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TAG_NAME="v$(date -u +'%Y.%m.%d-%H%M')"
+          RELEASE_DATE="$(date -u +'%Y-%m-%d %H:%M') UTC"
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+          echo "RELEASE_DATE=$RELEASE_DATE" >> $GITHUB_ENV
+
+          jq \
+            --arg generated_at "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            --arg tag "$TAG_NAME" \
+            --argjson files "$(find Releases -type f -printf '%f\n' | sort | jq -Rn '[inputs]')" \
+            '. + {generated_at: $generated_at, tag: $tag, files: $files}' \
+            data/lookups.json > build-info.json
+
+          {
+            echo "Automated build of the latest firmware for all boards sold by ViroVR."
+            echo
+            echo "**Built variants:** ${FILE_COUNT} of ${MATRIX_COUNT}"
+            if [ "${FILE_COUNT}" -ne "${MATRIX_COUNT}" ]; then
+              echo
+              echo "> ⚠️ Some variants failed to build and are missing from this release. Check the [workflow run](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}) for details."
+            fi
+            echo
+            echo "### Firmware sources"
+            jq -r '.firmware | to_entries[] | "- \(.key | sub("^https://github.com/"; "") | sub("\\.git@"; " @ ")) — `\(.value[0:7])`"' build-info.json
+            echo
+            echo "### nRF Connect SDK"
+            jq -r '.sdk | to_entries[] | "- \(.key | sub("^https://github.com/"; "") | sub("\\.git@"; " @ ")) — `\(.value[0:7])`"' build-info.json
+            echo
+            echo "### Files"
+            jq -r '.files[] | "- `\(.)`"' build-info.json
+          } > notes.md
+
+          cat notes.md
+
+      - name: 📁 Create GitHub Release
+        id: create-release
+        run: |
+          set -euo pipefail
+
+          FILES=$(find Releases -type f | sort)
+
+          gh release create "${{ env.TAG_NAME }}" $FILES build-info.json \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "ViroVR Firmware ${{ env.RELEASE_DATE }}" \
+            --notes-file notes.md \
+            --latest
