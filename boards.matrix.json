@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "notes": {
-    "description": "Build matrix for all firmware sold by ViroVR. Each variant references a source (firmware repository + revision), and each source references a profile (nRF Connect SDK repository + revision + Zephyr SDK version).",
+    "description": "Build matrix for all firmware sold by VYRO VR. Each variant references a source (firmware repository + revision), and each source references a profile (nRF Connect SDK repository + revision + Zephyr SDK version).",
     "profile_keys": [
       "sdk_url",
       "sdk_revision",
@@ -44,84 +44,84 @@
       "boardname": "mochi_uf2/nrf52833",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "ViroVR_Tracker_Mochi",
+      "filename": "VYRO_VR_Tracker_Mochi",
       "fileformat": "uf2"
     },
     {
       "boardname": "promicro_uf2/nrf52840/chrysalis",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "ViroVR_Tracker_ProMicro_Chrysalis",
+      "filename": "VYRO_VR_Tracker_ProMicro_Chrysalis",
       "fileformat": "uf2"
     },
     {
       "boardname": "promicro_uf2/nrf52840/default_i2c",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "ViroVR_Tracker_ProMicro_Default_I2C",
+      "filename": "VYRO_VR_Tracker_ProMicro_Default_I2C",
       "fileformat": "uf2"
     },
     {
       "boardname": "promicro_uf2/nrf52840/default_spi",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "ViroVR_Tracker_ProMicro_Default_SPI",
+      "filename": "VYRO_VR_Tracker_ProMicro_Default_SPI",
       "fileformat": "uf2"
     },
     {
       "boardname": "promicro_uf2/nrf52840/i2c",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "ViroVR_Tracker_ProMicro_Stacked_I2C",
+      "filename": "VYRO_VR_Tracker_ProMicro_Stacked_I2C",
       "fileformat": "uf2"
     },
     {
       "boardname": "promicro_uf2/nrf52840/spi",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "ViroVR_Tracker_ProMicro_Stacked_SPI",
+      "filename": "VYRO_VR_Tracker_ProMicro_Stacked_SPI",
       "fileformat": "uf2"
     },
     {
       "boardname": "foxdongle_uf2/nrf52840",
       "source": "receiver_dev",
       "type": "receiver",
-      "filename": "ViroVR_Receiver_Fox_Dongle",
+      "filename": "VYRO_VR_Receiver_Fox_Dongle",
       "fileformat": "uf2"
     },
     {
       "boardname": "foxdongle33_uf2/nrf52833",
       "source": "receiver_dev",
       "type": "receiver",
-      "filename": "ViroVR_Receiver_Fox_Dongle33",
+      "filename": "VYRO_VR_Receiver_Fox_Dongle33",
       "fileformat": "uf2"
     },
     {
       "boardname": "holyiot_21017/nrf52840",
       "source": "receiver_dev",
       "type": "receiver",
-      "filename": "ViroVR_Receiver_Holyiot_21017",
+      "filename": "VYRO_VR_Receiver_Holyiot_21017",
       "fileformat": "hex"
     },
     {
       "boardname": "holyiot_22046/nrf52840",
       "source": "receiver_dev",
       "type": "receiver",
-      "filename": "ViroVR_Receiver_Holyiot_22046",
+      "filename": "VYRO_VR_Receiver_Holyiot_22046",
       "fileformat": "hex"
     },
     {
       "boardname": "styria_r1_uf2/nrf52840",
       "source": "receiver_dev",
       "type": "receiver",
-      "filename": "ViroVR_Receiver_Styria_R1",
+      "filename": "VYRO_VR_Receiver_Styria_R1",
       "fileformat": "uf2"
     },
     {
       "boardname": "promicro_uf2/nrf52840",
       "source": "receiver_dev",
       "type": "receiver",
-      "filename": "ViroVR_Receiver_ProMicro",
+      "filename": "VYRO_VR_Receiver_ProMicro",
       "fileformat": "uf2"
     }
   ]

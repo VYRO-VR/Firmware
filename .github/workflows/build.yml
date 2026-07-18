@@ -1,4 +1,4 @@
-name: Build & Release ViroVR Firmware
+name: Build & Release VYRO VR Firmware
 
 on:
   pull_request:
@@ -605,7 +605,7 @@ jobs:
             data/lookups.json > build-info.json
 
           {
-            echo "Automated build of the latest firmware for all boards sold by ViroVR."
+            echo "Automated build of the latest firmware for all boards sold by VYRO VR."
             echo
             echo "**Built variants:** ${FILE_COUNT} of ${MATRIX_COUNT}"
             if [ "${FILE_COUNT}" -ne "${MATRIX_COUNT}" ]; then
@@ -634,6 +634,6 @@ jobs:
 
           gh release create "${{ env.TAG_NAME }}" $FILES build-info.json \
             --repo "${GITHUB_REPOSITORY}" \
-            --title "ViroVR Firmware ${{ env.RELEASE_DATE }}" \
+            --title "VYRO VR Firmware ${{ env.RELEASE_DATE }}" \
             --notes-file notes.md \
             --latest

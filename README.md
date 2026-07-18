@@ -1,9 +1,9 @@
-# ViroVR Firmware
+# VYRO VR Firmware
 
-Automated firmware builds and releases for every board sold by **ViroVR**.
+Automated firmware builds and releases for every board sold by **VYRO VR**.
 
 This repository does not contain firmware source code. It is a CI harness that pulls the
-latest firmware from the ViroVR source repositories, builds every product variant, and
+latest firmware from the VYRO VR source repositories, builds every product variant, and
 publishes the resulting `.uf2` / `.hex` files as GitHub Releases — automatically, every
 time the firmware is updated.
 
@@ -14,18 +14,18 @@ time the firmware is updated.
 
 | File | Product | Type | Format |
 | --- | --- | --- | --- |
-| `ViroVR_Tracker_Mochi.uf2` | Mochi tracker | Tracker | UF2 |
-| `ViroVR_Tracker_ProMicro_Chrysalis.uf2` | Stacked Chrysalis (ProMicro) tracker | Tracker | UF2 |
-| `ViroVR_Tracker_ProMicro_Default_I2C.uf2` | ProMicro tracker (default I2C wiring) | Tracker | UF2 |
-| `ViroVR_Tracker_ProMicro_Default_SPI.uf2` | ProMicro tracker (default SPI wiring) | Tracker | UF2 |
-| `ViroVR_Tracker_ProMicro_Stacked_I2C.uf2` | Stacked ProMicro tracker (I2C) | Tracker | UF2 |
-| `ViroVR_Tracker_ProMicro_Stacked_SPI.uf2` | Stacked ProMicro tracker (SPI) | Tracker | UF2 |
-| `ViroVR_Receiver_Fox_Dongle.uf2` | Fox dongle (nRF52840) | Receiver | UF2 |
-| `ViroVR_Receiver_Fox_Dongle33.uf2` | Fox dongle (nRF52833) | Receiver | UF2 |
-| `ViroVR_Receiver_Holyiot_21017.hex` | Holyiot 21017 dongle | Receiver | HEX |
-| `ViroVR_Receiver_Holyiot_22046.hex` | Holyiot 22046 dongle | Receiver | HEX |
-| `ViroVR_Receiver_Styria_R1.uf2` | Styria R1 receiver | Receiver | UF2 |
-| `ViroVR_Receiver_ProMicro.uf2` | ProMicro receiver | Receiver | UF2 |
+| `VYRO_VR_Tracker_Mochi.uf2` | Mochi tracker | Tracker | UF2 |
+| `VYRO_VR_Tracker_ProMicro_Chrysalis.uf2` | Stacked Chrysalis (ProMicro) tracker | Tracker | UF2 |
+| `VYRO_VR_Tracker_ProMicro_Default_I2C.uf2` | ProMicro tracker (default I2C wiring) | Tracker | UF2 |
+| `VYRO_VR_Tracker_ProMicro_Default_SPI.uf2` | ProMicro tracker (default SPI wiring) | Tracker | UF2 |
+| `VYRO_VR_Tracker_ProMicro_Stacked_I2C.uf2` | Stacked ProMicro tracker (I2C) | Tracker | UF2 |
+| `VYRO_VR_Tracker_ProMicro_Stacked_SPI.uf2` | Stacked ProMicro tracker (SPI) | Tracker | UF2 |
+| `VYRO_VR_Receiver_Fox_Dongle.uf2` | Fox dongle (nRF52840) | Receiver | UF2 |
+| `VYRO_VR_Receiver_Fox_Dongle33.uf2` | Fox dongle (nRF52833) | Receiver | UF2 |
+| `VYRO_VR_Receiver_Holyiot_21017.hex` | Holyiot 21017 dongle | Receiver | HEX |
+| `VYRO_VR_Receiver_Holyiot_22046.hex` | Holyiot 22046 dongle | Receiver | HEX |
+| `VYRO_VR_Receiver_Styria_R1.uf2` | Styria R1 receiver | Receiver | UF2 |
+| `VYRO_VR_Receiver_ProMicro.uf2` | ProMicro receiver | Receiver | UF2 |
 
 **UF2 files:** double-tap reset (or short RST to GND twice) to enter the bootloader, then
 drag and drop the `.uf2` file onto the USB drive that appears.
