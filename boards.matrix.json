@@ -97,6 +97,13 @@
       "fileformat": "uf2"
     },
     {
+      "boardname": "foxdongle33_uf2/nrf52833",
+      "source": "receiver_dev",
+      "type": "receiver",
+      "filename": "VVR_Receiver_Fox_Dongle33",
+      "fileformat": "uf2"
+    },
+    {
       "boardname": "holyiot_21017/nrf52840",
       "source": "receiver_dev",
       "type": "receiver",
