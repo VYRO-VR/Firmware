@@ -531,6 +531,37 @@ jobs:
 
           mv "$SRC" "Releases-${{ matrix.boards.index }}/${{ matrix.boards.filename }}_${FIRMWARE_SHORT}.$FORMAT"
 
+      # Boards without a UF2 bootloader ship a raw .hex, but the Nordic USB
+      # bootloader only accepts Secure-DFU .zip packages (init packet + image).
+      # Package the hex so these receivers can be updated over USB — e.g. by
+      # VYRO Preflight via nrfutil — without an SWD programmer. The raw .hex is
+      # still published for SWD flashing.
+      - name: 📦 Package Nordic DFU Zip (hex boards)
+        id: package-dfu
+        if: ${{ steps.build-firmware.outcome == 'success' && matrix.boards.fileformat == 'hex' }}
+        run: |
+          set -euo pipefail
+          cd zephyr-workspace
+
+          NRFUTIL="$HOME/nrfutil-bin"
+          curl -fsSL -o "$NRFUTIL" https://developer.nordicsemi.com/.pc-tools/nrfutil/x64-linux/nrfutil
+          chmod +x "$NRFUTIL"
+          "$NRFUTIL" install nrf5sdk-tools
+
+          FIRMWARE_SHORT="$(echo "${{ steps.firmware-hash.outputs.firmware_sha }}" | cut -c1-7)"
+          HEX="Releases-${{ matrix.boards.index }}/${{ matrix.boards.filename }}_${FIRMWARE_SHORT}.hex"
+          ZIP="Releases-${{ matrix.boards.index }}/${{ matrix.boards.filename }}_${FIRMWARE_SHORT}.zip"
+
+          # hw-version 52 = nRF52 family; sd-req 0x00 = no SoftDevice (bare
+          # Zephyr/ESB firmware); application-version is not enforced by the
+          # open bootloader.
+          "$NRFUTIL" pkg generate \
+            --hw-version 52 \
+            --sd-req 0x00 \
+            --application-version 1 \
+            --application "$HEX" \
+            "$ZIP"
+
       - name: 💾 Upload Firmware Artifact
         id: upload-payload
         if: ${{ steps.build-firmware.outcome == 'success' }}
@@ -541,6 +572,7 @@ jobs:
           path: |
             zephyr-workspace/Releases-${{ matrix.boards.index }}/*.uf2
             zephyr-workspace/Releases-${{ matrix.boards.index }}/*.hex
+            zephyr-workspace/Releases-${{ matrix.boards.index }}/*.zip
 
   release:
     needs: [generate_matrix, generate_lookups, build]
@@ -577,7 +609,7 @@ jobs:
           mkdir -p Releases
 
           echo "Collecting firmware files..."
-          find collected-firmware -type f \( -name "*.uf2" -o -name "*.hex" \) -exec cp {} Releases/ \;
+          find collected-firmware -type f \( -name "*.uf2" -o -name "*.hex" -o -name "*.zip" \) -exec cp {} Releases/ \;
           echo "Firmware files collected:"
           ls -lah Releases
 

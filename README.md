@@ -34,7 +34,10 @@ firmware version it contains.
 drag and drop the `.uf2` file onto the USB drive that appears.
 
 **HEX files:** for boards without a UF2 bootloader (Holyiot dongles) — flash with a SWD
-programmer or `nrfutil`.
+programmer. Each `.hex` board also gets a matching **`.zip`** Secure-DFU package (same name,
+`.zip` extension) that flashes over USB with `nrfutil device program --firmware <file>.zip
+--traits nordicDfu` — this is the file VYRO Preflight uses to update these receivers
+automatically.
 
 ## Firmware sources
 
