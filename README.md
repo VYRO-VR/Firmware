@@ -14,20 +14,24 @@ time the firmware is updated.
 
 | File | Product | Type | Format |
 | --- | --- | --- | --- |
-| `VYRO_VR_Tracker_Mochi.uf2` | Mochi tracker | Tracker | UF2 |
-| `VYRO_VR_Tracker_ProMicro_Chrysalis.uf2` | Stacked Chrysalis (ProMicro) tracker | Tracker | UF2 |
-| `VYRO_VR_Tracker_ProMicro_Default_I2C.uf2` | ProMicro tracker (default I2C wiring) | Tracker | UF2 |
-| `VYRO_VR_Tracker_ProMicro_Default_SPI.uf2` | ProMicro tracker (default SPI wiring) | Tracker | UF2 |
-| `VYRO_VR_Tracker_ProMicro_Stacked_I2C.uf2` | Stacked ProMicro tracker (I2C) | Tracker | UF2 |
-| `VYRO_VR_Tracker_ProMicro_Stacked_SPI.uf2` | Stacked ProMicro tracker (SPI) | Tracker | UF2 |
-| `VYRO_VR_Tracker_Styria_Mini_I2C.uf2` | Styria Mini tracker (I2C IMU) | Tracker | UF2 |
-| `VYRO_VR_Tracker_Styria_Mini_SPI.uf2` | Styria Mini tracker (SPI IMU) | Tracker | UF2 |
-| `VYRO_VR_Receiver_Fox_Dongle.uf2` | Fox dongle (nRF52840) | Receiver | UF2 |
-| `VYRO_VR_Receiver_Fox_Dongle33.uf2` | Fox dongle (nRF52833) | Receiver | UF2 |
-| `VYRO_VR_Receiver_Holyiot_21017.hex` | Holyiot 21017 dongle | Receiver | HEX |
-| `VYRO_VR_Receiver_Holyiot_22046.hex` | Holyiot 22046 dongle | Receiver | HEX |
-| `VYRO_VR_Receiver_Styria_R1.uf2` | Styria R1 receiver | Receiver | UF2 |
-| `VYRO_VR_Receiver_ProMicro.uf2` | ProMicro receiver | Receiver | UF2 |
+| `VVR_Tracker_Mochi_{commit}.uf2` | Mochi tracker | Tracker | UF2 |
+| `VVR_Tracker_ProMicro_Chrysalis_{commit}.uf2` | Stacked Chrysalis (ProMicro) tracker | Tracker | UF2 |
+| `VVR_Tracker_ProMicro_Default_I2C_{commit}.uf2` | ProMicro tracker (default I2C wiring) | Tracker | UF2 |
+| `VVR_Tracker_ProMicro_Default_SPI_{commit}.uf2` | ProMicro tracker (default SPI wiring) | Tracker | UF2 |
+| `VVR_Tracker_ProMicro_Stacked_I2C_{commit}.uf2` | Stacked ProMicro tracker (I2C) | Tracker | UF2 |
+| `VVR_Tracker_ProMicro_Stacked_SPI_{commit}.uf2` | Stacked ProMicro tracker (SPI) | Tracker | UF2 |
+| `VVR_Tracker_Styria_Mini_I2C_{commit}.uf2` | Styria Mini tracker (I2C IMU) | Tracker | UF2 |
+| `VVR_Tracker_Styria_Mini_SPI_{commit}.uf2` | Styria Mini tracker (SPI IMU) | Tracker | UF2 |
+| `VVR_Receiver_Fox_Dongle_{commit}.uf2` | Fox dongle (nRF52840) | Receiver | UF2 |
+| `VVR_Receiver_Fox_Dongle33_{commit}.uf2` | Fox dongle (nRF52833) | Receiver | UF2 |
+| `VVR_Receiver_Holyiot_21017_{commit}.hex` | Holyiot 21017 dongle | Receiver | HEX |
+| `VVR_Receiver_Holyiot_22046_{commit}.hex` | Holyiot 22046 dongle | Receiver | HEX |
+| `VVR_Receiver_Styria_R1_{commit}.uf2` | Styria R1 receiver | Receiver | UF2 |
+| `VVR_Receiver_ProMicro_{commit}.uf2` | ProMicro receiver | Receiver | UF2 |
+
+`{commit}` is the short commit hash of the firmware source repository the file was built
+from (e.g. `VVR_Receiver_Fox_Dongle_f750a5b.uf2`), so every file identifies exactly which
+firmware version it contains.
 
 **UF2 files:** double-tap reset (or short RST to GND twice) to enter the bootloader, then
 drag and drop the `.uf2` file onto the USB drive that appears.

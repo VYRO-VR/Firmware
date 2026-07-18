@@ -44,98 +44,98 @@
       "boardname": "mochi_uf2/nrf52833",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "VYRO_VR_Tracker_Mochi",
+      "filename": "VVR_Tracker_Mochi",
       "fileformat": "uf2"
     },
     {
       "boardname": "promicro_uf2/nrf52840/chrysalis",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "VYRO_VR_Tracker_ProMicro_Chrysalis",
+      "filename": "VVR_Tracker_ProMicro_Chrysalis",
       "fileformat": "uf2"
     },
     {
       "boardname": "promicro_uf2/nrf52840/default_i2c",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "VYRO_VR_Tracker_ProMicro_Default_I2C",
+      "filename": "VVR_Tracker_ProMicro_Default_I2C",
       "fileformat": "uf2"
     },
     {
       "boardname": "promicro_uf2/nrf52840/default_spi",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "VYRO_VR_Tracker_ProMicro_Default_SPI",
+      "filename": "VVR_Tracker_ProMicro_Default_SPI",
       "fileformat": "uf2"
     },
     {
       "boardname": "promicro_uf2/nrf52840/i2c",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "VYRO_VR_Tracker_ProMicro_Stacked_I2C",
+      "filename": "VVR_Tracker_ProMicro_Stacked_I2C",
       "fileformat": "uf2"
     },
     {
       "boardname": "promicro_uf2/nrf52840/spi",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "VYRO_VR_Tracker_ProMicro_Stacked_SPI",
+      "filename": "VVR_Tracker_ProMicro_Stacked_SPI",
       "fileformat": "uf2"
     },
     {
       "boardname": "styria_mini_uf2/nrf52840",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "VYRO_VR_Tracker_Styria_Mini_I2C",
+      "filename": "VVR_Tracker_Styria_Mini_I2C",
       "fileformat": "uf2"
     },
     {
       "boardname": "styria_mini_uf2/nrf52840/spi",
       "source": "tracker_dev",
       "type": "tracker",
-      "filename": "VYRO_VR_Tracker_Styria_Mini_SPI",
+      "filename": "VVR_Tracker_Styria_Mini_SPI",
       "fileformat": "uf2"
     },
     {
       "boardname": "foxdongle_uf2/nrf52840",
       "source": "receiver_dev",
       "type": "receiver",
-      "filename": "VYRO_VR_Receiver_Fox_Dongle",
+      "filename": "VVR_Receiver_Fox_Dongle",
       "fileformat": "uf2"
     },
     {
       "boardname": "foxdongle33_uf2/nrf52833",
       "source": "receiver_dev",
       "type": "receiver",
-      "filename": "VYRO_VR_Receiver_Fox_Dongle33",
+      "filename": "VVR_Receiver_Fox_Dongle33",
       "fileformat": "uf2"
     },
     {
       "boardname": "holyiot_21017/nrf52840",
       "source": "receiver_dev",
       "type": "receiver",
-      "filename": "VYRO_VR_Receiver_Holyiot_21017",
+      "filename": "VVR_Receiver_Holyiot_21017",
       "fileformat": "hex"
     },
     {
       "boardname": "holyiot_22046/nrf52840",
       "source": "receiver_dev",
       "type": "receiver",
-      "filename": "VYRO_VR_Receiver_Holyiot_22046",
+      "filename": "VVR_Receiver_Holyiot_22046",
       "fileformat": "hex"
     },
     {
       "boardname": "styria_r1_uf2/nrf52840",
       "source": "receiver_dev",
       "type": "receiver",
-      "filename": "VYRO_VR_Receiver_Styria_R1",
+      "filename": "VVR_Receiver_Styria_R1",
       "fileformat": "uf2"
     },
     {
       "boardname": "promicro_uf2/nrf52840",
       "source": "receiver_dev",
       "type": "receiver",
-      "filename": "VYRO_VR_Receiver_ProMicro",
+      "filename": "VVR_Receiver_ProMicro",
       "fileformat": "uf2"
     }
   ]

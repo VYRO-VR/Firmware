@@ -527,7 +527,9 @@ jobs:
             exit 1
           fi
 
-          mv "$SRC" "Releases-${{ matrix.boards.index }}/${{ matrix.boards.filename }}.$FORMAT"
+          FIRMWARE_SHORT="$(echo "${{ steps.firmware-hash.outputs.firmware_sha }}" | cut -c1-7)"
+
+          mv "$SRC" "Releases-${{ matrix.boards.index }}/${{ matrix.boards.filename }}_${FIRMWARE_SHORT}.$FORMAT"
 
       - name: 💾 Upload Firmware Artifact
         id: upload-payload
