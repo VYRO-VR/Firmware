@@ -118,13 +118,6 @@
       "fileformat": "hex"
     },
     {
-      "boardname": "holyiot_22046/nrf52840",
-      "source": "receiver_dev",
-      "type": "receiver",
-      "filename": "VVR_Receiver_Holyiot_22046",
-      "fileformat": "hex"
-    },
-    {
       "boardname": "styria_r1_uf2/nrf52840",
       "source": "receiver_dev",
       "type": "receiver",

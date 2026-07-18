@@ -25,7 +25,6 @@ time the firmware is updated.
 | `VVR_Receiver_Fox_Dongle_{commit}.uf2` | Fox dongle (nRF52840) | Receiver | UF2 |
 | `VVR_Receiver_Fox_Dongle33_{commit}.uf2` | Fox dongle (nRF52833) | Receiver | UF2 |
 | `VVR_Receiver_Holyiot_21017_{commit}.hex` | Holyiot 21017 dongle | Receiver | HEX |
-| `VVR_Receiver_Holyiot_22046_{commit}.hex` | Holyiot 22046 dongle | Receiver | HEX |
 | `VVR_Receiver_Styria_R1_{commit}.uf2` | Styria R1 receiver | Receiver | UF2 |
 | `VVR_Receiver_ProMicro_{commit}.uf2` | ProMicro receiver | Receiver | UF2 |
 
