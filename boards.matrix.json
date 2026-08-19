@@ -25,6 +25,11 @@
       "sdk_url": "https://github.com/jitingcn/sdk-nrf.git",
       "sdk_revision": "v3.2-branch",
       "zephyr_sdk_version": "0.17.4"
+    },
+    "sdk_jiting_v3_3": {
+      "sdk_url": "https://github.com/jitingcn/sdk-nrf.git",
+      "sdk_revision": "v3.3-branch",
+      "zephyr_sdk_version": "0.17.4"
     }
   },
   "sources": {
@@ -36,7 +41,7 @@
     "tracker_dev": {
       "repository_url": "https://github.com/VYRO-VR/jitingcn-smol-slime-firmware.git",
       "repository_revision": "dev",
-      "profile": "sdk_jiting_v3_2"
+      "profile": "sdk_jiting_v3_3"
     }
   },
   "variants": [
