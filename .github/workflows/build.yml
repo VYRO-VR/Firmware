@@ -1,10 +1,9 @@
 name: Build & Release VYRO VR Firmware
 
 on:
+  # No branch filter: this repository's default branch is not main/master, so a
+  # filtered pull_request trigger silently skipped build validation on every PR.
   pull_request:
-    branches:
-      - main
-      - master
   push:
     branches:
       - main
@@ -375,7 +374,12 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ~/.venv
-          key: venv-pip-${{ matrix.boards.zephyr_sdk_version }}
+          # Keyed on the resolved nRF Connect SDK commit, not just the Zephyr
+          # SDK version: two profiles can share a Zephyr SDK while pinning
+          # different NCS revisions, and their Python requirements differ
+          # (NCS 3.3 needs jsonschema for list_boards.py, nrf-regtool, ...).
+          # A version-only key hands an NCS 3.2 venv to an NCS 3.3 build.
+          key: venv-pip-${{ matrix.boards.zephyr_sdk_version }}-${{ steps.sdk-hash.outputs.sdk_sha }}
 
       - name: 📦 Restore Python Venv
         if: steps.restore-pip.outputs.cache-hit != 'true'
@@ -439,9 +443,24 @@ jobs:
         id: install-pip-requirements
         if: steps.restore-pip.outputs.cache-hit != 'true'
         run: |
+          set -euo pipefail
           cd zephyr-workspace
 
-          ~/.venv/bin/pip install -r zephyr/scripts/requirements.txt
+          # Zephyr's own requirements are not enough for an NCS build: sdk-nrf
+          # needs nrf-regtool/partition-manager deps and sysbuild MCUboot images
+          # need imgtool's deps. Both files are optional so an SDK revision that
+          # does not ship them still builds.
+          REQS=(-r zephyr/scripts/requirements.txt)
+          for extra in nrf/scripts/requirements-build.txt \
+                       bootloader/mcuboot/scripts/requirements.txt; do
+            if [ -f "$extra" ]; then
+              REQS+=(-r "$extra")
+            else
+              echo "Skipping missing requirements file: $extra"
+            fi
+          done
+
+          ~/.venv/bin/pip install "${REQS[@]}"
 
       - name: 📦 Save Zephyr Python Requirements
         id: cache-pip
@@ -449,7 +468,7 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ~/.venv
-          key: venv-pip-${{ matrix.boards.zephyr_sdk_version }}
+          key: venv-pip-${{ matrix.boards.zephyr_sdk_version }}-${{ steps.sdk-hash.outputs.sdk_sha }}
 
       - name: 🔎 Lookup Firmware Hash
         id: firmware-hash
