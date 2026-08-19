@@ -1,10 +1,9 @@
 name: Build & Release VYRO VR Firmware
 
 on:
+  # No branch filter: this repository's default branch is not main/master, so a
+  # filtered pull_request trigger silently skipped build validation on every PR.
   pull_request:
-    branches:
-      - main
-      - master
   push:
     branches:
       - main
