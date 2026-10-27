@@ -560,6 +560,83 @@ jobs:
 
           mv "$SRC" "Releases-${{ matrix.boards.index }}/${{ matrix.boards.filename }}_${FIRMWARE_SHORT}.$FORMAT"
 
+      # Boards that ship a UF2 bootloader can also publish a combined
+      # (bootloader + application + bootloader-settings) .hex so a bare board
+      # is programmed in one SWD/J-Link step. These steps are best-effort: a
+      # bootloader build failure must not drop the board's regular .uf2.
+      - name: 🧰 Install ARM bare-metal toolchain (combined hex)
+        id: install-arm-toolchain
+        if: ${{ steps.build-firmware.outcome == 'success' && matrix.boards.bootloader_repo != '' }}
+        continue-on-error: true
+        run: |
+          # Plain apt-get (not the apt cache action) so the newlib headers that
+          # live in transitive deps (libnewlib-dev owns the target string.h)
+          # are pulled in.
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
+          arm-none-eabi-gcc --version | head -1
+
+      - name: 🥾 Build UF2 bootloader (no SoftDevice)
+        id: build-bootloader
+        if: ${{ steps.install-arm-toolchain.outcome == 'success' && matrix.boards.bootloader_repo != '' }}
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          rm -rf bootloader-build
+          git clone --filter=blob:none --no-checkout "${{ matrix.boards.bootloader_repo }}" bootloader-build
+          cd bootloader-build
+          git checkout "${{ matrix.boards.bootloader_sha }}"
+          git submodule update --init --depth 1
+          # `make all` would also build a DFU .zip (needs adafruit-nrfutil) and
+          # a SoftDevice-merged hex we don't need (the app loads at 0x1000, no
+          # SoftDevice). Build only the MBR + bootloader image via a second
+          # makefile read AFTER the main Makefile so $(BUILD)/$(OUT_NAME) are
+          # defined. GIT_VERSION is overridden because git-describe on a pinned,
+          # tagless commit yields a bare SHA the Makefile's version math can't parse.
+          printf 'nosd_only: $(BUILD)/$(OUT_NAME)_nosd.hex\n' > nosd_only.mk
+          make -f Makefile -f nosd_only.mk \
+            BOARD="${{ matrix.boards.bootloader_board }}" \
+            MCU_SUB_VARIANT="${{ matrix.boards.bootloader_mcu }}" \
+            GIT_VERSION="${{ matrix.boards.bootloader_version }}" nosd_only
+          ls -la _build/build-${{ matrix.boards.bootloader_board }}/*_nosd.hex
+
+      - name: 🔗 Merge bootloader + application into combined hex
+        id: merge-combined
+        if: ${{ steps.build-bootloader.outcome == 'success' && matrix.boards.bootloader_repo != '' }}
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.venv/bin:$PATH"
+          cd zephyr-workspace
+
+          BL=$(ls "$GITHUB_WORKSPACE"/bootloader-build/_build/build-${{ matrix.boards.bootloader_board }}/*_nosd.hex | head -1)
+          APP=""
+          for d in firmware/build/firmware/zephyr firmware/build/zephyr; do
+            if [ -f "$d/zephyr.hex" ]; then APP="$d/zephyr.hex"; break; fi
+          done
+          if [ -z "$APP" ]; then
+            echo "Missing zephyr.hex next to the UF2 output" >&2
+            exit 1
+          fi
+
+          # The SDK11-based Adafruit bootloader only launches the app when its
+          # settings page flags bank_0 == BANK_VALID_APP. That flag is written
+          # by the UF2/DFU update flow, NOT by a raw SWD flash, so a plain
+          # bootloader+app merge would boot into DFU (the UF2 drive) instead of
+          # the app. Generate a settings page marking the app valid; bank_0_crc=0
+          # tells the bootloader to skip the CRC check.
+          python3 -c "import struct; from intelhex import IntelHex; d=struct.pack('<HHH2x5I',1,0,0,0,0,0,0,0); ih=IntelHex(); ih.frombytes(d,offset=${{ matrix.boards.bootloader_settings_addr }}); ih.write_hex_file('bl_settings.hex')"
+
+          FIRMWARE_SHORT="$(echo "${{ steps.firmware-hash.outputs.firmware_sha }}" | cut -c1-7)"
+          OUT="Releases-${{ matrix.boards.index }}/${{ matrix.boards.combined_filename }}_${FIRMWARE_SHORT}.hex"
+
+          # Bootloader/MBR/UICR, application and settings page do not overlap;
+          # --overlap=replace matches the SoftDevice merge convention used by
+          # the source repositories.
+          python3 zephyr/scripts/build/mergehex.py --overlap=replace -o "$OUT" "$BL" "$APP" bl_settings.hex
+          ls -la "$OUT"
+
       # Boards without a UF2 bootloader ship a raw .hex, but the Nordic USB
       # bootloader only accepts Secure-DFU .zip packages (init packet + image).
       # Package the hex so these receivers can be updated over USB — e.g. by
@@ -642,7 +719,8 @@ jobs:
           echo "Firmware files collected:"
           ls -lah Releases
 
-          FILE_COUNT=$(find Releases -type f \( -name "*.uf2" -o -name "*.hex" \) | wc -l)
+          # Combined bootloader+app hexes are extras, not variants.
+          FILE_COUNT=$(find Releases -type f \( -name "*.uf2" -o -name "*.hex" \) ! -name "VVR_Combined_*" | wc -l)
           if [ "$FILE_COUNT" -eq 0 ]; then
             echo "ERROR: No firmware files were built — refusing to create an empty release." >&2
             exit 1

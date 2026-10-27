@@ -18,7 +18,19 @@
       "type",
       "filename",
       "fileformat"
-    ]
+    ],
+    "optional_variant_keys": {
+      "description": "Set on boards that also publish a combined bootloader + application .hex for SWD/J-Link flashing (named VVR_Combined_<Kind>_<Board>_<commit>.hex; the Combined prefix keeps it out of VYRO Preflight's firmware picker).",
+      "keys": [
+        "combined_filename",
+        "bootloader_repo",
+        "bootloader_sha",
+        "bootloader_board",
+        "bootloader_mcu",
+        "bootloader_version",
+        "bootloader_settings_addr"
+      ]
+    }
   },
   "profiles": {
     "sdk_jiting_v3_4": {
@@ -45,7 +57,14 @@
       "source": "tracker_dev",
       "type": "tracker",
       "filename": "VVR_Tracker_Mochi",
-      "fileformat": "uf2"
+      "fileformat": "uf2",
+      "combined_filename": "VVR_Combined_Tracker_Mochi",
+      "bootloader_repo": "https://github.com/SlimeVR/Adafruit_nRF52_Bootloader.git",
+      "bootloader_sha": "35f6d102064026b30b4da9eaae059eec6ce6904b",
+      "bootloader_board": "mochaelec_mochi",
+      "bootloader_mcu": "nrf52833",
+      "bootloader_version": "0.9.2-mochi-g35f6d10",
+      "bootloader_settings_addr": "0x7F000"
     },
     {
       "boardname": "promicro_uf2/nrf52840/chrysalis",
@@ -94,7 +113,14 @@
       "source": "receiver_dev",
       "type": "receiver",
       "filename": "VVR_Receiver_Fox_Dongle",
-      "fileformat": "uf2"
+      "fileformat": "uf2",
+      "combined_filename": "VVR_Combined_Receiver_Fox_Dongle",
+      "bootloader_repo": "https://github.com/KenRouKoro/Adafruit_nRF52_Bootloader.git",
+      "bootloader_sha": "95e85f15c1969735b930e29dfdb8df2748064ef4",
+      "bootloader_board": "foxdongle_nrf52840",
+      "bootloader_mcu": "nrf52840",
+      "bootloader_version": "0.9.2-fox-g95e85f1",
+      "bootloader_settings_addr": "0xFF000"
     },
     {
       "boardname": "foxdongle33_uf2/nrf52833",
