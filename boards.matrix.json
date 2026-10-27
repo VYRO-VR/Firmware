@@ -21,27 +21,22 @@
     ]
   },
   "profiles": {
-    "sdk_jiting_v3_2": {
+    "sdk_jiting_v3_4": {
       "sdk_url": "https://github.com/jitingcn/sdk-nrf.git",
-      "sdk_revision": "v3.2-branch",
-      "zephyr_sdk_version": "0.17.4"
-    },
-    "sdk_jiting_v3_3": {
-      "sdk_url": "https://github.com/jitingcn/sdk-nrf.git",
-      "sdk_revision": "v3.3-branch",
-      "zephyr_sdk_version": "0.17.4"
+      "sdk_revision": "v3.4-branch",
+      "zephyr_sdk_version": "1.0.1"
     }
   },
   "sources": {
     "receiver_dev": {
       "repository_url": "https://github.com/VYRO-VR/SlimeVR-Tracker-nRF-Receiver.git",
       "repository_revision": "dev",
-      "profile": "sdk_jiting_v3_2"
+      "profile": "sdk_jiting_v3_4"
     },
     "tracker_dev": {
       "repository_url": "https://github.com/VYRO-VR/jitingcn-smol-slime-firmware.git",
       "repository_revision": "dev",
-      "profile": "sdk_jiting_v3_3"
+      "profile": "sdk_jiting_v3_4"
     }
   },
   "variants": [
