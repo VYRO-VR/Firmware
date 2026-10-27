@@ -27,6 +27,23 @@ time the firmware is updated.
 | `VVR_Receiver_Styria_R1_{commit}.uf2` | Styria R1 receiver | Receiver | UF2 |
 | `VVR_Receiver_ProMicro_{commit}.uf2` | ProMicro receiver | Receiver | UF2 |
 
+### Combined bootloader + application hex
+
+For bare boards that have no UF2 bootloader yet, these single `.hex` files hold the UF2
+bootloader, the application and a "valid app" bootloader-settings page, so one SWD/J-Link
+flash gives a board that boots straight into the firmware:
+
+| File | Product |
+| --- | --- |
+| `VVR_Combined_Tracker_Mochi_{commit}.hex` | Mochi tracker (nRF52833) |
+| `VVR_Combined_Receiver_Fox_Dongle_{commit}.hex` | Fox dongle (nRF52840) |
+
+They are extras: they are named `VVR_Combined_…` so VYRO Preflight's firmware picker ignores
+them, and they don't count toward a release's "built variants". Once a board has the
+bootloader, update it with the normal `.uf2`. The bootloader is built from a pinned commit
+configured per board in `boards.matrix.json` (`bootloader_*` keys). To add a board, set those
+keys on its variant.
+
 `{commit}` is the short commit hash of the firmware source repository the file was built
 from (e.g. `VVR_Receiver_Fox_Dongle_f750a5b.uf2`), so every file identifies exactly which
 firmware version it contains.
