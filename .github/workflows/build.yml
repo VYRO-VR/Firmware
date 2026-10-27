@@ -604,7 +604,7 @@ jobs:
     env:
       MATRIX_COUNT: ${{ needs.generate_matrix.outputs.count }}
       GH_TOKEN: ${{ secrets.GH_TOKEN || github.token }}
-    if: ${{ github.event_name == 'workflow_dispatch' || ((github.event_name == 'schedule' || github.event_name == 'repository_dispatch' || github.event_name == 'push') && needs.generate_lookups.outputs.changed == 'true') }}
+    if: ${{ false && (github.event_name == 'workflow_dispatch' || ((github.event_name == 'schedule' || github.event_name == 'repository_dispatch' || github.event_name == 'push') && needs.generate_lookups.outputs.changed == 'true')) }}
     runs-on: ubuntu-latest
     steps:
 

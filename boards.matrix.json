@@ -35,12 +35,12 @@
   "sources": {
     "receiver_dev": {
       "repository_url": "https://github.com/VYRO-VR/SlimeVR-Tracker-nRF-Receiver.git",
-      "repository_revision": "dev",
+      "repository_revision": "claude/fix-fem-soc-series",
       "profile": "sdk_jiting_v3_2"
     },
     "tracker_dev": {
       "repository_url": "https://github.com/VYRO-VR/jitingcn-smol-slime-firmware.git",
-      "repository_revision": "dev",
+      "repository_revision": "claude/fix-flash-map-macros",
       "profile": "sdk_jiting_v3_3"
     }
   },
