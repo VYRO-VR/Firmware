@@ -573,7 +573,7 @@ jobs:
           cd zephyr-workspace
 
           NRFUTIL="$HOME/nrfutil-bin"
-          curl -fsSL -o "$NRFUTIL" https://developer.nordicsemi.com/.pc-tools/nrfutil/x64-linux/nrfutil
+          curl -fsSL -o "$NRFUTIL" https://files.nordicsemi.com/artifactory/swtools/external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil
           chmod +x "$NRFUTIL"
           "$NRFUTIL" install nrf5sdk-tools
 
