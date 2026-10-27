@@ -28,6 +28,10 @@ permissions:
 env:
   REF_SHA: ${{ github.event.pull_request.head.sha || github.ref }}
   BOARD_MATRIX_FILE: "boards.matrix.json"
+  # Zephyr SDK 1.x splits toolchain variants; the firmware repositories' own CI
+  # builds with the GNU one against the SDK installed in ~/zephyr-sdk.
+  ZEPHYR_TOOLCHAIN_VARIANT: "zephyr/gnu"
+  ZEPHYR_SDK_INSTALL_DIR: "/home/runner/zephyr-sdk"
 
 jobs:
 
@@ -646,7 +650,7 @@ jobs:
           cd zephyr-workspace
 
           NRFUTIL="$HOME/nrfutil-bin"
-          curl -fsSL -o "$NRFUTIL" https://developer.nordicsemi.com/.pc-tools/nrfutil/x64-linux/nrfutil
+          curl -fsSL -o "$NRFUTIL" https://files.nordicsemi.com/artifactory/swtools/external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil
           chmod +x "$NRFUTIL"
           "$NRFUTIL" install nrf5sdk-tools
 

@@ -65,8 +65,8 @@ automatically.
 | [VYRO-VR/SlimeVR-Tracker-nRF-Receiver](https://github.com/VYRO-VR/SlimeVR-Tracker-nRF-Receiver) | `dev` | Receiver firmware |
 
 Each is built against the [jitingcn/sdk-nrf](https://github.com/jitingcn/sdk-nrf) (nRF
-Connect SDK) revision named in its own `west.yml` — tracker firmware on `v3.3-branch`,
-receiver firmware on `v3.2-branch` — with Zephyr SDK 0.17.4. When a firmware repository
+Connect SDK) revision named in its own `west.yml` (currently `v3.4-branch` for both) with
+Zephyr SDK 1.0.1. When a firmware repository
 moves to a new SDK branch, its `profile` in `boards.matrix.json` has to move with it, or
 its builds fail against the old SDK.
 
