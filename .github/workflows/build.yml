@@ -10,6 +10,11 @@ on:
       - master
       - claude/virovr-firmware-releases-ffn6si
   workflow_dispatch:
+  # Sent by the firmware source repos (see their notify-firmware-ci workflow)
+  # on every push, so a release follows a source update within minutes instead
+  # of waiting for the next scheduled poll.
+  repository_dispatch:
+    types: [firmware-updated]
   schedule:
     - cron: "17 */6 * * *"
 
@@ -277,7 +282,7 @@ jobs:
 
   build:
     needs: [setup, generate_matrix, generate_lookups]
-    if: ${{ github.event_name != 'schedule' || needs.generate_lookups.outputs.changed == 'true' }}
+    if: ${{ (github.event_name != 'schedule' && github.event_name != 'repository_dispatch') || needs.generate_lookups.outputs.changed == 'true' }}
     continue-on-error: true
     strategy:
       fail-fast: false
@@ -599,7 +604,7 @@ jobs:
     env:
       MATRIX_COUNT: ${{ needs.generate_matrix.outputs.count }}
       GH_TOKEN: ${{ secrets.GH_TOKEN || github.token }}
-    if: ${{ github.event_name == 'workflow_dispatch' || ((github.event_name == 'schedule' || github.event_name == 'push') && needs.generate_lookups.outputs.changed == 'true') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || ((github.event_name == 'schedule' || github.event_name == 'repository_dispatch' || github.event_name == 'push') && needs.generate_lookups.outputs.changed == 'true') }}
     runs-on: ubuntu-latest
     steps:
 
